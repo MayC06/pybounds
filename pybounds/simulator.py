@@ -178,7 +178,7 @@ class Simulator(object):
 
         self.mpc.set_param(**setup_mpc)
 
-        # Get template's for MPC time-varying parameters
+        # Get templates for MPC time-varying parameters
         self.mpc_tvp_template = self.mpc.get_tvp_template()
         self.simulator_tvp_template = self.simulator.get_tvp_template()
 
@@ -284,7 +284,7 @@ class Simulator(object):
             raise Exception('u must be None if running MPC')
 
         if (mpc is False) and (u is None):
-            warnings.warn('not running MPC or setting u directly')
+            warnings.warn('must set u directly if not running MPC')
 
         # Update the initial state
         if x0 is None:
