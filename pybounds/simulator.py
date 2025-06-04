@@ -425,7 +425,7 @@ class Simulator(object):
                 delta = y_max - y_min
                 if np.abs(delta) < 0.01:
                     margin = 0.1
-                    ax[n].set_ylim(y_min - margin, y_max + margin)
+                    # ax[n].set_ylim(y_min - margin, y_max + margin)
                 else:
                     margin = 0.0
 
