@@ -651,12 +651,6 @@ def PC_response_de(params, inputs, initcond):
             #res[i] = np.abs(C[i] - res[i])
             res[i] = C[i]-res[i]
             r[i] = r[i]
-    
-    #fig, ax = plt.subplots(5,1)
-    #ax[0].plot(res)
-    #ax[0].plot(C)
-    #ax[1].plot(flip)
-    #ax[2].plot(ratio)
 
     return res, r
 
@@ -667,11 +661,6 @@ def sumPFNvecs(PFN_bumps, PFN_amps):
     opp = PFN_amps[0, :] * np.sin(PFN_bumps[0, :]) + PFN_amps[1, :] * np.sin(PFN_bumps[1, :])
     va = np.arctan2(opp, adj)
     vm = np.sqrt(opp ** 2 + adj ** 2)
-    
-#     # Using complex numbers
-#     cmplx = np.sum(PFN_amps * np.exp(PFN_amps * 1j), axis=0)
-#     va = np.angle(cmplx)
-#     vm = np.abs(cmplx)
 
     return va, vm
 
@@ -695,12 +684,6 @@ def PFNd_integ(params, inputs, initcond):
     res = AF + OF                     # comment out for noAF or noOF
     # res = OF                            # comment in for noAF
     # res = AF                          # comment in for noOF
-    
-    ## Alt. Ver. for weighted sums (0.1 rad is approx 6 deg)
-    # cohInds = np.where(abs(inputs[0,:]-inputs[2,:])<=0.1)[0]
-    # divInds = np.where(abs(inputs[0,:]-inputs[2,:])>0.1)[0]
-    # res[cohInds] = 0.89*AF[cohInds] + 0.67*OF[cohInds]
-    # res[divInds] = 0.72*AF[divInds] + 0.90*OF[divInds]
 
     return res, a, o
 
@@ -758,7 +741,7 @@ def PFNpc_integ2(params, inputs, initcond):
 
 def SteadyStateInitial_amp(params,inputs,isPFNa=False):
     # params is the parameter vector for one half of the PB to one stimulus modality, e.g. p_PFNd[0,:]
-    # inputs is a vector of len=2, the starting direction and speed for the modality of interest
+    # inputs is a vector of len=2, the starting direction (0) and speed (1) for the modality of interest
     # returns the steady-state value of the amplitude model for the given inputs
     if isPFNa:
         C = params[0] * (1 - np.exp(-inputs[1])) * (np.cos(inputs[0] - params[2]) ** 2 + params[1] * np.cos(inputs[0] - params[2] + np.pi) + params[3])
@@ -772,6 +755,7 @@ def SteadyStateInitial_amp(params,inputs,isPFNa=False):
 
 
 def SteadyStateInitial_bump(inputs):
+    ## This is a holdover from when bump position is sensitive to airflow direction
     ## inputs is a vector of len=3, for heading direction, airflow direction, and airspeed
     #h = -inputs[0]
     if inputs[2]!=0:
@@ -779,7 +763,7 @@ def SteadyStateInitial_bump(inputs):
     else:
         ss = 0
         
-    ss=0  # for testing heading dropout
+    ss=0  # set to zero if no influence of airflow on bump position. (Heading added in later in the model)
     
     return ss
 
