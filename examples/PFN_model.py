@@ -581,29 +581,25 @@ def PC_response_de(params, inputs, initcond):
     speedvec = np.fmax(np.zeros_like(inputs[1,:]),inputs[1, :])  # cm/s, zero-floored
     t = inputs[2, :]  # seconds
     
-    # Get stimulus decrease periods ("offset") and change speedvec to produce the desired results
+    ## Alt: get stimulus OFF periods (speed==0) and change speedvec to produce desired results
+    offs = np.zeros_like(t)
+    offinds = [i for i in range(len(speedvec)) if speedvec[i]==0]
+    offs[offinds] = 1
     dspd = np.diff(speedvec)
     offs = np.zeros_like(t)
     for i in range(len(speedvec)-1):
         if dspd[i] !=0:
-            speedvec[i+1] = speedvec[i]+abs(dspd[i])
+            speedvec[i+1] = speedvec[i]+(0.5*abs(dspd[i]))
         else:
             speedvec[i+1] = speedvec[i]
-            
-        if dspd[i]<0:
-            offs[i+1] = 1
-        elif dspd[i]==0:
-            offs[i+1] = offs[i]
-        else:
-            offs[i+1] = 0
     
     # Parameters
     # a is like Amp
     a = np.ones_like(t)*params[0,0]
     a[np.nonzero(offs)[0]] = params[1,0]
     # c is speed coefficient for max, =1 for non-speed-tuned PFNs
-    c = np.ones_like(t)*params[0,1]
-    c[np.nonzero(offs)[0]] = params[1,1]
+    c = np.ones_like(t)*params[0,1]                                     ## comment out `*params[0,1]` for no speed tuning
+    c[np.nonzero(offs)[0]] = params[1,1]                                 ## comment this line out entirely for no speed tuning
     # prefdir is in rads; parameter formerly known as theta0
     prefdir = np.ones_like(t)*params[0,2]
     prefdir[np.nonzero(offs)[0]] = params[1,2]    
@@ -611,7 +607,7 @@ def PC_response_de(params, inputs, initcond):
     b = np.ones_like(t)*params[0,3]
     b[np.nonzero(offs)[0]] = params[1,3]
     # ratio is of steady-state to max amp; =0 for steady-state=0; ratio=1 for PFNd OF
-    ratio = np.ones_like(t)*params[0,4]
+    ratio = np.ones_like(t)*np.abs(params[0,4])
     ratio[np.nonzero(offs)[0]] = params[1,4]
     # tau is time constant with no dependency
     tau = np.ones_like(t)*params[0,5]
@@ -626,8 +622,12 @@ def PC_response_de(params, inputs, initcond):
     # Set anchoring values for numerical solution: C is like max value, T is
     # full tau expression, res[0] is the initial result (assumed to be the
     # steady state if the first timestep inputs were held constant).
+    
+    ## uncomment the following line and comment out the `C = ...` line below it if PFNpc is direction tuned.
     C = np.multiply(a, np.multiply((1 - np.exp(np.multiply(c, -speedvec))), (np.cos(thetavec - prefdir) + b)))
-    T = tau + np.multiply(tauslope, np.exp(speedvec / 100))
+    ## comment out above line and use the following line instead if no PFNpc direction tuning
+    #C = np.multiply(a, np.multiply((1 - np.exp(np.multiply(c, -speedvec))), (np.cos(0 - prefdir) + b))) 
+    T = tau + np.multiply(tauslope, np.exp(-speedvec))
     res = np.zeros_like(t)
 
     res[0] = initcond
@@ -648,8 +648,8 @@ def PC_response_de(params, inputs, initcond):
     # Handle negative values for AF response curves.
     for i in range(len(t)):
         if flip[i] != 0:
-            #res[i] = np.abs(C[i] - res[i])
-            res[i] = C[i]-res[i]
+            res[i] = np.abs(C[i] - res[i])
+            #res[i] = C[i]-res[i]
             r[i] = r[i]
 
     return res, r
